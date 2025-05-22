@@ -30,16 +30,16 @@
             //     this.addWallet();
             // });
 
-            $('#manage-wallets').on('click', (e) => {
-                e.preventDefault();
-                this.$walletModal.addClass('show');
-            });
-            
-            //!To Check
-            // $('#add-wallet').on('click', (e) => {
+            // $('#manage-wallets').on('click', (e) => {
             //     e.preventDefault();
             //     this.$walletModal.addClass('show');
             // });
+            
+            
+            $('#add-wallet').on('click', (e) => {
+                e.preventDefault();
+                this.$walletModal.addClass('show');
+            });
             
             $('.modal-footer button:first').on('click', (e) => {
                 e.preventDefault();
