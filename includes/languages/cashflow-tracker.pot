@@ -1,0 +1,118 @@
+# Copyright (C) 2023 Your Name
+# This file is distributed under the same license as the Cash Flow Tracker plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Cash Flow Tracker 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-07-01 15:00+0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: includes/Shortcode.php:14
+msgid "Please log in to access the Cash Flow Tracker."
+msgstr ""
+
+#: includes/Shortcode.php:23
+msgid "Cash Flow Tracker"
+msgstr ""
+
+#: includes/Shortcode.php:26
+msgid "Manage Wallets"
+msgstr ""
+
+#: includes/Shortcode.php:27
+msgid "Logout"
+msgstr ""
+
+#: includes/Shortcode.php:31
+msgid "Welcome, %s!"
+msgstr ""
+
+#: includes/Shortcode.php:35
+msgid "Current Balance"
+msgstr ""
+
+#: includes/Shortcode.php:41
+msgid "Cash In"
+msgstr ""
+
+#: includes/Shortcode.php:42
+msgid "Cash Out"
+msgstr ""
+
+#: includes/Shortcode.php:47
+msgid "Wallet Status"
+msgstr ""
+
+#: includes/Shortcode.php:48
+msgid "Add Wallet"
+msgstr ""
+
+#: includes/Shortcode.php:53
+msgid "Monthly Cash Flow"
+msgstr ""
+
+#: includes/Shortcode.php:59
+msgid "Add New Transaction"
+msgstr ""
+
+#: includes/Shortcode.php:60
+msgid "What was it for?"
+msgstr ""
+
+#: includes/Shortcode.php:61
+msgid "Amount (₱)"
+msgstr ""
+
+#: includes/Shortcode.php:62
+msgid "Select a wallet"
+msgstr ""
+
+#: includes/Shortcode.php:68
+msgid "Transaction History"
+msgstr ""
+
+#: includes/Shortcode.php:69
+msgid "Clear All"
+msgstr ""
+
+#: includes/Shortcode.php:77
+msgid "Add New Wallet"
+msgstr ""
+
+#: includes/Shortcode.php:78
+msgid "e.g., Cash, Bank, E-wallet"
+msgstr ""
+
+#: includes/Shortcode.php:79
+msgid "Initial Balance (₱)"
+msgstr ""
+
+#: includes/Shortcode.php:81
+msgid "Cancel"
+msgstr ""
+
+#: includes/API.php:91
+msgid "Could not add wallet."
+msgstr ""
+
+#: includes/API.php:119
+msgid "Initial balance"
+msgstr ""
+
+#: includes/API.php:148
+msgid "Invalid wallet selected."
+msgstr ""
+
+#: includes/API.php:152
+msgid "Insufficient balance in wallet."
+msgstr ""
+
+#: includes/API.php:160
+msgid "Could not add transaction."
+msgstr ""

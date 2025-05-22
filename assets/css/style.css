@@ -1,0 +1,331 @@
+#cashflow-tracker {
+    max-width: 800px; 
+    margin: 2rem auto; 
+    background: #fff; 
+    padding: 1.5rem;
+    border-radius: 8px; 
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.tracker-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.tracker-header h1 {
+    font-size: 1.75rem; 
+    font-weight: 600;
+    margin: 0;
+}
+
+.tracker-header nav a {
+    margin-left: 1rem; 
+    text-decoration: none; 
+    color: #007aff;
+    font-size: .9rem;
+}
+
+.welcome {
+    margin-bottom: 1.25rem; 
+    font-size: 1rem; 
+    color: #555;
+}
+
+.balance-card {
+    background: #3366ff; 
+    color: #fff; 
+    border-radius: 8px;
+    padding: 1rem; 
+    margin-bottom: 1.5rem;
+}
+
+.balance-card .label { 
+    font-size: .9rem; 
+    opacity: 0.9;
+}
+
+.balance-card .amount { 
+    font-size: 1.5rem; 
+    margin-top: .25rem; 
+    font-weight: 600;
+}
+
+.flows { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 1rem; 
+}
+
+.flows > div { 
+    flex: 1; 
+}
+
+.flows .label { 
+    font-size: .85rem; 
+    opacity: 0.9; 
+}
+
+.flows .amount { 
+    font-size: 1.1rem; 
+    margin-top: .25rem; 
+    font-weight: 500;
+}
+
+.flows .in  { color: #b8e994 }
+.flows .out { color: #ff7979 }
+
+.wallets h2, .chart h2, .txn-form h2, .history h2 {
+    font-size: 1.25rem; 
+    margin-bottom: .75rem;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.wallets h2 button, .history h2 button {
+    background: none; 
+    border: none; 
+    color: #007aff; 
+    font-size: .9rem; 
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.wallets h2 button:hover, .history h2 button:hover {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.wallet-list {
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .75rem; 
+    margin-bottom: 1.5rem;
+}
+
+.wallet-card {
+    background: #f5f7fa; 
+    padding: .75rem; 
+    border-radius: 6px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    font-size: .9rem;
+    transition: transform 0.2s;
+}
+
+.wallet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.chart canvas { 
+    width: 100% !important; 
+    height: 250px !important; 
+    margin-bottom: 1.5rem;
+}
+
+.txn-form form { 
+    display: grid; 
+    gap: .75rem; 
+    margin-bottom: 1.5rem; 
+}
+
+.txn-form input, .txn-form select {
+    width: 100%; 
+    padding: .75rem; 
+    font-size: 1rem;
+    border: 1px solid #ddd; 
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.txn-form input:focus, .txn-form select:focus {
+    border-color: #007aff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.btn-group { 
+    display: flex; 
+    gap: .5rem; 
+    margin-top: 0.5rem;
+}
+
+.btn {
+    flex: 1; 
+    padding: .75rem; 
+    border: none; 
+    border-radius: 4px;
+    font-size: 1rem; 
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn.success { 
+    background: #28a745; 
+    color: #fff; 
+}
+
+.btn.danger  { 
+    background: #dc3545; 
+    color: #fff; 
+}
+
+.btn.success:hover {
+    background: #218838;
+}
+
+.btn.danger:hover {
+    background: #c82333;
+}
+
+.history ul {
+    list-style: none; 
+    padding: 0; 
+    max-height: 300px; 
+    overflow-y: auto;
+    margin: 0;
+}
+
+.history li {
+    background: #f5f7fa; 
+    margin-bottom: .5rem; 
+    padding: .75rem;
+    border-radius: 4px; 
+    display: flex; 
+    justify-content: space-between;
+    font-size: .9rem;
+    align-items: center;
+}
+
+.history li small {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.history li .in {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.history li .out {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    background: rgba(0,0,0,0.5); 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    z-index: 1000; 
+    display: none;
+}
+
+.modal.show { 
+    display: flex; 
+}
+
+.modal-content {
+    background: #fff; 
+    padding: 1.5rem; 
+    border-radius: 8px;
+    width: 100%; 
+    max-width: 400px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+    margin-top: 0; 
+    font-size: 1.25rem; 
+    margin-bottom: 1rem;
+}
+
+.modal-content input {
+    width: 100%; 
+    padding: 0.75rem; 
+    font-size: 1rem;
+    margin-bottom: 1rem; 
+    border-radius: 4px; 
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.modal-content input:focus {
+    border-color: #007aff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.modal-footer {
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 0.5rem;
+}
+
+.modal-footer button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.modal-footer button:first-child {
+    background: #f5f7fa;
+    border: 1px solid #ddd;
+}
+
+.modal-footer button:last-child {
+    background: #007aff;
+    color: #fff;
+    border: none;
+}
+
+.modal-footer button:last-child:hover {
+    background: #0069d9;
+}
+
+.cft-notice {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 4px;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+@media (max-width: 600px) {
+    #cashflow-tracker {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    
+    .tracker-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .wallet-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+}
