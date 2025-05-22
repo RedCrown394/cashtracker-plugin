@@ -1,4 +1,4 @@
-=== Cash Flow Tracker ===
+=== Cash Flow Tracker === Edited
 Contributors: yourname
 Tags: finance, money, cashflow, budget, tracker
 Requires at least: 5.6
