@@ -25,10 +25,10 @@
         
         bindEvents() {
 
-            $('#add-wallet-btn').on('click', (e) => {
-                e.preventDefault();
-                this.addWallet();
-            });
+            // $('#add-wallet-btn').on('click', (e) => {
+            //     e.preventDefault();
+            //     this.addWallet();
+            // });
 
             $('#manage-wallets').on('click', (e) => {
                 e.preventDefault();
