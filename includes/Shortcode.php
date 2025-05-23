@@ -83,6 +83,7 @@ class Shortcode {
             </div>
         </div>
 
+
         <!--modal for manage wallet-->
         <div class="modal" id="manage-wallets-modal">
             <div class="modal-content">
@@ -119,7 +120,7 @@ class Shortcode {
                 <button id="add-new-wallet-btn" class="btn">
                     <?php _e('+ Add New Wallet', 'cashflow-tracker'); ?>
                 </button>
-                <button onclick="hideManageWalletsModal()" class="btn">
+                <button id="close-manage-wallet-modal" class="btn">
                     <?php _e('Close', 'cashflow-tracker'); ?>
                 </button>
                 </div>

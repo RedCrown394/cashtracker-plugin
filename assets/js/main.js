@@ -29,63 +29,71 @@
             this.$walletEditSelect = $('#wallet-edit-select');
             this.$editName = $('#edit-wallet-name');
             this.$editBalance = $('#edit-wallet-balance');
+            this.initModals();
         }
+
+        // ====================MANAGE WALLET MODAL==================== //
+        //? Grouping the modal related methods for better organization  //
+        // =========================================================== //
+        initModals() {
+            // 1. Manage Wallets Modal
+            $('#manage-wallets').on('click', (e) => {
+                e.preventDefault();
+                this.showManageModal();
+            });
+
+            // 2. Switch to Add Wallet modal
+            $('#add-new-wallet-btn').on('click', (e) => {
+                e.preventDefault();
+                this.hideManageModal();
+                this.showAddWalletModal();
+            });
+
+            // 3. Close Button (specific to this modal)
+            $('#close-manage-wallet-modal').on('click', (e) => {
+                e.preventDefault();
+                this.hideManageModal();
+            });
+
+            // 4. Load Wallet Data When Selected
+            $('#wallet-edit-select').on('change', () => this.loadWalletForEditing());
+
+            // 5. Save Changes
+            $('#save-wallet-changes').on('click', (e) => {
+                e.preventDefault();
+                this.saveWalletChanges();
+            });
+
+            // 6. Delete Wallet
+            $('#delete-wallet').on('click', (e) => {
+                e.preventDefault();
+                this.deleteSelectedWallet();
+            });
+
+        }
+        // ====================END OF MANAGE WALLET MODAL==================== //
+        //? Grouping the modal related methods for better organization        //
+        // ================================================================== //
+
         
         bindEvents() {
-
-
-            //! CONFLICT IN ADD WALLET AND MANAGE WALLET MODAL
-            //! Error Closing Modal for Manage Wallet
-            // ==============Add Wallet Modal===================
+            // ===================ADD WALLET MODAL=================== //
             $('#add-wallet').on('click', (e) => {
                 e.preventDefault();
-                this.$walletModal.addClass('show');
+                this.showAddWalletModal();
             });
-            
-            $('.modal-footer button:first').on('click', (e) => {
+
+            $('#add-wallet-btn').on('click', (e) => {
                 e.preventDefault();
-                this.$walletModal.removeClass('show');
-            });
-            
-            $('.modal-footer button:last').on('click', (e) => {
-                e.preventDefault();
-                //Call the function to add a wallet
                 this.addWallet();
             });
 
-            this.$cancelWalletBtn.on('click', (e) => {
+            $('#cancel-wallet-btn').on('click', (e) => {
                 e.preventDefault();
-                this.hideWalletModal();
+                this.hideAddWalletModal();
             });
-            // ==============End of Add Wallet Modal===================
+            // ==============END OF ADD WALLET MODALL=================== //
 
-
-
-            // ==============Manage Wallet Modal===================
-            $('#manage-wallets').on('click', (e) => {
-            e.preventDefault();
-            this.showManageModal();
-            });
-
-            $('#wallet-edit-select').on('change', (e) => {
-            this.loadWalletForEditing();
-            });
-
-            $('#save-wallet-changes').on('click', (e) => {
-            this.saveWalletChanges();
-            });
-
-            $('#delete-wallet').on('click', (e) => {
-            this.deleteSelectedWallet();
-            });
-
-            $('#add-new-wallet-btn').on('click', (e) => {
-            this.$manageModal.removeClass('show');
-            this.$walletModal.addClass('show');
-            });
-            // ==============End of Manage Wallet Modal===================
-
-        
 
             //Clear All Transactions
             $('#clear-all').on('click', (e) => {
@@ -103,13 +111,17 @@
             });
         }
         
-
-        //================METHODS for Manage Wallet=========================
-
+        // ===================METHODS FOR MANAGE WALLET=================== //
         showManageModal() {
         this.$walletEditSelect.empty().append('<option value="">Select a wallet</option>');
         this.$manageModal.addClass('show');
         this.loadWalletsForManagement();
+        }
+
+        hideManageModal() {
+            this.$manageModal.removeClass('show');
+            this.$walletEditSelect.val('');
+            $('.wallet-edit-form').hide();
         }
 
         loadWalletsForManagement() {
@@ -202,12 +214,97 @@
         toggleBalanceWarning(balance) {
         this.$editBalance.toggleClass('negative', balance < 0);
         }
+        // ================ END OF METHODS FOR MANAGE WALLET=================== //
 
-        //================ END of methods for Manage Wallet=========================
 
-        hideWalletModal() {
+        // ================ ADD WALLET MODAL CONTROL METHODS ================ //
+        showAddWalletModal() {
+            this.$walletModal.addClass('show');
+            this.$walletName.val('');
+            this.$walletBalance.val('0.00');
+        }
+
+        hideAddWalletModal() {
             this.$walletModal.removeClass('show');
         }
+
+        addWallet() {
+            const name = $('#wallet-name').val().trim();
+            const balance = parseFloat($('#wallet-balance').val()) || 0;
+            
+            if (!name) {
+                alert(cftData.i18n.invalid_data);
+                return;
+            }
+            
+            $.ajax({
+                url: cftData.rest_url + '/wallets',
+                method: 'POST',
+                beforeSend: (xhr) => {
+                    xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                },
+                data: JSON.stringify({
+                    name: name,
+                    balance: balance
+                }),
+                success: (response) => {
+                    this.$walletModal.removeClass('show');
+                    this.$walletName.val('');
+                    this.$walletBalance.val('');
+                    this.loadData();
+                },
+                error: (xhr) => {
+                    let errorMsg = 'Error adding wallet';
+                    if (xhr.responseJSON) {
+                        errorMsg = xhr.responseJSON.message || 'Database error';
+                        if (xhr.responseJSON.data?.db_error) {
+                            errorMsg += ` (Technical details: ${xhr.responseJSON.data.db_error})`;
+                        }
+                    }
+                    alert(errorMsg);
+                    console.error('Full error:', xhr.responseJSON || xhr.statusText);
+                }
+            });
+        }
+        
+        addTransaction(type) {
+            const formData = this.$txnForm.serializeArray();
+            const data = {};
+            
+            formData.forEach(item => {
+                data[item.name] = item.value;
+            });
+            
+            if (!data.desc || !data.amount || !data.wallet) {
+                alert(cftData.i18n.invalid_data);
+                return;
+            }
+            
+            $.ajax({
+                url: cftData.rest_url + '/transactions',
+                method: 'POST',
+                beforeSend: (xhr) => {
+                    xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+                },
+                data: {
+                    desc: data.desc,
+                    amount: parseFloat(data.amount),
+                    wallet_id: parseInt(data.wallet),
+                    type: type
+                },
+                success: () => {
+                    this.$txnForm.trigger('reset');
+                    this.loadData();
+                },
+                error: (xhr) => {
+                    const error = xhr.responseJSON || {};
+                    console.error('Error adding transaction:', error);
+                    alert(error.message || cftData.i18n.error);
+                }
+            });
+        }
+        // ================ END OF ADD WALLET MODAL CONTROL METHODS ================ //
     
         loadData() {
             this.loadWallets();
@@ -347,83 +444,6 @@
                             beginAtZero: true
                         }
                     }
-                }
-            });
-        }
-        
-        addWallet() {
-            const name = $('#wallet-name').val().trim();
-            const balance = parseFloat($('#wallet-balance').val()) || 0;
-            
-            if (!name) {
-                alert(cftData.i18n.invalid_data);
-                return;
-            }
-            
-            $.ajax({
-                url: cftData.rest_url + '/wallets',
-                method: 'POST',
-                beforeSend: (xhr) => {
-                    xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                },
-                data: JSON.stringify({
-                    name: name,
-                    balance: balance
-                }),
-                success: (response) => {
-                    this.$walletModal.removeClass('show');
-                    this.$walletName.val('');
-                    this.$walletBalance.val('');
-                    this.loadData();
-                },
-                error: (xhr) => {
-                    let errorMsg = 'Error adding wallet';
-                    if (xhr.responseJSON) {
-                        errorMsg = xhr.responseJSON.message || 'Database error';
-                        if (xhr.responseJSON.data?.db_error) {
-                            errorMsg += ` (Technical details: ${xhr.responseJSON.data.db_error})`;
-                        }
-                    }
-                    alert(errorMsg);
-                    console.error('Full error:', xhr.responseJSON || xhr.statusText);
-                }
-            });
-        }
-        
-        addTransaction(type) {
-            const formData = this.$txnForm.serializeArray();
-            const data = {};
-            
-            formData.forEach(item => {
-                data[item.name] = item.value;
-            });
-            
-            if (!data.desc || !data.amount || !data.wallet) {
-                alert(cftData.i18n.invalid_data);
-                return;
-            }
-            
-            $.ajax({
-                url: cftData.rest_url + '/transactions',
-                method: 'POST',
-                beforeSend: (xhr) => {
-                    xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
-                },
-                data: {
-                    desc: data.desc,
-                    amount: parseFloat(data.amount),
-                    wallet_id: parseInt(data.wallet),
-                    type: type
-                },
-                success: () => {
-                    this.$txnForm.trigger('reset');
-                    this.loadData();
-                },
-                error: (xhr) => {
-                    const error = xhr.responseJSON || {};
-                    console.error('Error adding transaction:', error);
-                    alert(error.message || cftData.i18n.error);
                 }
             });
         }
