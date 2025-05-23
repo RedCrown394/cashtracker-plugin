@@ -15,27 +15,28 @@
             this.$walletSelect = $('#wallet-select');
             this.$txnHistory = $('#txn-history');
             this.$txnForm = $('#transaction-form');
-            this.$walletModal = $('#wallet-modal');
+            
             this.chart = null;
 
-            //Newly added for fix
+            // Add Wallet Modal
+            this.$walletModal = $('#wallet-modal');
             this.$walletName = $('#wallet-name');
             this.$walletBalance = $('#wallet-balance');
+            this.$cancelWalletBtn = $('#cancel-wallet-btn');
+
+            //Manage wallet
+            this.$manageModal = $('#manage-wallets-modal');
+            this.$walletEditSelect = $('#wallet-edit-select');
+            this.$editName = $('#edit-wallet-name');
+            this.$editBalance = $('#edit-wallet-balance');
         }
         
         bindEvents() {
 
-            // $('#add-wallet-btn').on('click', (e) => {
-            //     e.preventDefault();
-            //     this.addWallet();
-            // });
 
-            // $('#manage-wallets').on('click', (e) => {
-            //     e.preventDefault();
-            //     this.$walletModal.addClass('show');
-            // });
-            
-            
+            //! CONFLICT IN ADD WALLET AND MANAGE WALLET MODAL
+            //! Error Closing Modal for Manage Wallet
+            // ==============Add Wallet Modal===================
             $('#add-wallet').on('click', (e) => {
                 e.preventDefault();
                 this.$walletModal.addClass('show');
@@ -48,9 +49,45 @@
             
             $('.modal-footer button:last').on('click', (e) => {
                 e.preventDefault();
+                //Call the function to add a wallet
                 this.addWallet();
             });
-            
+
+            this.$cancelWalletBtn.on('click', (e) => {
+                e.preventDefault();
+                this.hideWalletModal();
+            });
+            // ==============End of Add Wallet Modal===================
+
+
+
+            // ==============Manage Wallet Modal===================
+            $('#manage-wallets').on('click', (e) => {
+            e.preventDefault();
+            this.showManageModal();
+            });
+
+            $('#wallet-edit-select').on('change', (e) => {
+            this.loadWalletForEditing();
+            });
+
+            $('#save-wallet-changes').on('click', (e) => {
+            this.saveWalletChanges();
+            });
+
+            $('#delete-wallet').on('click', (e) => {
+            this.deleteSelectedWallet();
+            });
+
+            $('#add-new-wallet-btn').on('click', (e) => {
+            this.$manageModal.removeClass('show');
+            this.$walletModal.addClass('show');
+            });
+            // ==============End of Manage Wallet Modal===================
+
+        
+
+            //Clear All Transactions
             $('#clear-all').on('click', (e) => {
                 e.preventDefault();
                 if (confirm(cftData.i18n.clear_confirm || 'Are you sure you want to clear all data?')) {
@@ -66,6 +103,112 @@
             });
         }
         
+
+        //================METHODS for Manage Wallet=========================
+
+        showManageModal() {
+        this.$walletEditSelect.empty().append('<option value="">Select a wallet</option>');
+        this.$manageModal.addClass('show');
+        this.loadWalletsForManagement();
+        }
+
+        loadWalletsForManagement() {
+            $.ajax({
+                url: cftData.rest_url + '/wallets',
+                method: 'GET',
+                beforeSend: (xhr) => {
+                xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+                },
+                success: (response) => {
+                response.forEach(wallet => {
+                    this.$walletEditSelect.append(
+                    `<option value="${wallet.id}">${wallet.name} (₱${wallet.balance})</option>`
+                    );
+                });
+                }
+            });
+        }
+
+        loadWalletForEditing() {
+            const walletId = this.$walletEditSelect.val();
+            if (!walletId) {
+                $('.wallet-edit-form').hide();
+                return;
+            }
+
+            $.ajax({
+                url: `${cftData.rest_url}/wallets/${walletId}`,
+                method: 'GET',
+                beforeSend: (xhr) => {
+                xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+                },
+                success: (wallet) => {
+                this.$editName.val(wallet.name);
+                this.$editBalance.val(wallet.balance);
+                this.toggleBalanceWarning(wallet.balance);
+                $('.wallet-edit-form').show();
+                }
+            });
+        }   
+        
+        saveWalletChanges() {
+        const walletId = this.$walletEditSelect.val();
+        const newName = this.$editName.val().trim();
+        const newBalance = parseFloat(this.$editBalance.val());
+
+        if (!newName) {
+            alert(cftData.i18n.invalid_data);
+            return;
+        }
+
+        $.ajax({
+            url: `${cftData.rest_url}/wallets/${walletId}`,
+            method: 'POST',
+            beforeSend: (xhr) => {
+            xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+            },
+            data: {
+            name: newName,
+            balance: newBalance
+            },
+            success: () => {
+            this.loadData(); // Refresh all data
+            this.loadWalletsForManagement(); // Refresh dropdown
+            alert('Wallet updated successfully');
+            }
+        });
+        }
+
+        deleteSelectedWallet() {
+        if (!confirm('Are you sure you want to delete this wallet?')) return;
+
+        const walletId = this.$walletEditSelect.val();
+        
+        $.ajax({
+            url: `${cftData.rest_url}/wallets/${walletId}`,
+            method: 'DELETE',
+            beforeSend: (xhr) => {
+            xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
+            },
+            success: () => {
+            this.loadData(); // Refresh all data
+            this.$walletEditSelect.val('');
+            $('.wallet-edit-form').hide();
+            alert('Wallet deleted successfully');
+            }
+        });
+        }
+
+        toggleBalanceWarning(balance) {
+        this.$editBalance.toggleClass('negative', balance < 0);
+        }
+
+        //================ END of methods for Manage Wallet=========================
+
+        hideWalletModal() {
+            this.$walletModal.removeClass('show');
+        }
+    
         loadData() {
             this.loadWallets();
             this.loadTransactions();
@@ -296,4 +439,5 @@
             new CashFlowTracker();
         }
     });
+
 })(jQuery);

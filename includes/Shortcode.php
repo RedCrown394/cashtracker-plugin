@@ -75,10 +75,53 @@ class Shortcode {
                 <input type="text" id="wallet-name" placeholder="<?php esc_attr_e('e.g., Cash, Bank, E-wallet', 'cashflow-tracker'); ?>">
                 <input type="number" id="wallet-balance" placeholder="<?php esc_attr_e('Initial Balance (₱)', 'cashflow-tracker'); ?>" value="0.00">
                 <div class="modal-footer">
-                    <button onclick="hideWalletModal()"><?php _e('Cancel', 'cashflow-tracker'); ?></button>
-                    <!-- <button onclick="addWalletEntry()" style="background:#007aff;color:#fff;padding:.5rem 1rem;border:none;border-radius:4px"><?php _e('Add Wallet', 'cashflow-tracker'); ?></button> -->
+                    <button id="cancel-wallet-btn"><?php _e('Cancel', 'cashflow-tracker'); ?></button>
                     <button id="add-wallet-btn" style="background:#007aff;color:#fff;padding:.5rem 1rem;border:none;border-radius:4px"><?php _e('Add Wallet', 'cashflow-tracker'); ?></button>
 
+                </div>
+            </div>
+        </div>
+
+
+        <!--modal for manage wallet-->
+        <div class="modal" id="manage-wallets-modal">
+            <div class="modal-content">
+                <h3><?php _e('Manage Wallets', 'cashflow-tracker'); ?></h3>
+                
+                <div class="wallet-selector">
+                <select id="wallet-edit-select">
+                    <option value=""><?php _e('Select a wallet', 'cashflow-tracker'); ?></option>
+                </select>
+                </div>
+
+                <div class="wallet-edit-form" style="display:none;">
+                <div class="form-group">
+                    <label><?php _e('Wallet Name:', 'cashflow-tracker'); ?></label>
+                    <input type="text" id="edit-wallet-name">
+                </div>
+                
+                <div class="form-group">
+                    <label><?php _e('Balance:', 'cashflow-tracker'); ?></label>
+                    <input type="number" step="0.01" id="edit-wallet-balance">
+                </div>
+
+                <div class="form-actions">
+                    <button id="save-wallet-changes" class="btn success">
+                    <?php _e('Save Changes', 'cashflow-tracker'); ?>
+                    </button>
+                    <button id="delete-wallet" class="btn danger">
+                    <?php _e('Delete', 'cashflow-tracker'); ?>
+                    </button>
+                </div>
+                </div>
+
+                <div class="modal-footer">
+                <button id="add-new-wallet-btn" class="btn">
+                    <?php _e('+ Add New Wallet', 'cashflow-tracker'); ?>
+                </button>
+                <button onclick="hideManageWalletsModal()" class="btn">
+                    <?php _e('Close', 'cashflow-tracker'); ?>
+                </button>
                 </div>
             </div>
         </div>

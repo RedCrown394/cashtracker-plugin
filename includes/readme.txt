@@ -1,4 +1,4 @@
-=== Cash Flow Tracker === 
+=== Cash Flow Tracker ===
 Contributors: yourname
 Tags: finance, money, cashflow, budget, tracker
 Requires at least: 5.6
@@ -11,7 +11,7 @@ A personal finance management tool for tracking income and expenses.
 
 == Description ==
 
-Cash Flow Tracker is a WordPress plugin that helps users manage their personal finances by tracking income and expenses across multiple wallets.
+Cash Flow Tracker helps users manage personal finances by tracking income and expenses across multiple wallets.
 
 Features:
 - Track cash flow (income and expenses)
@@ -20,34 +20,32 @@ Features:
 - Simple and intuitive interface
 - Responsive design works on all devices
 
-== Installation ==
+Planned Features:
+- CSV export functionality
+- Budget planning tools
+- Transaction categories
 
-1. Upload the plugin files to the `/wp-content/plugins/cashflow-tracker` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress
-3. Use the [cashflow_tracker] shortcode on any page to display the tracker
+== Installation ==
+1. Upload to `/wp-content/plugins/cashflow-tracker`
+2. Activate through WordPress plugins screen
+3. Use [cashflow_tracker] shortcode on any page
 
 == Frequently Asked Questions ==
 
 = How do I use this plugin? =
-Just add the [cashflow_tracker] shortcode to any page or post. The tracker will only be visible to logged-in users.
+Add the [cashflow_tracker] shortcode to any page. Visible only to logged-in users.
 
-= Where is the data stored? =
-The plugin creates two database tables to store wallet and transaction information.
+= Where is data stored? =
+In two dedicated database tables for wallets and transactions.
 
 = Can I export my data? =
-Not in this version, but we plan to add export functionality in future updates.
+Export functionality is planned for the next version.
 
 == Screenshots ==
-1. The main cash flow tracker interface
-2. Adding a new transaction
+1. Main tracker interface
+2. Adding a transaction
 3. Monthly cash flow chart
 
 == Changelog ==
-
 = 1.0 =
 * Initial release
-
-== Upgrade Notice ==
-
-= 1.0 =
-Initial release of Cash Flow Tracker.

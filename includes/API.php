@@ -5,6 +5,8 @@ defined('ABSPATH') || exit;
 
 class API {
     public function register_routes() {
+
+        //Handle Wallets
         register_rest_route('cashflow-tracker/v1', '/wallets', [
             [
                 'methods' => 'GET',
@@ -32,6 +34,7 @@ class API {
             ]
         ]);
         
+        //Handle Transactions
         register_rest_route('cashflow-tracker/v1', '/transactions', [
             [
                 'methods' => 'GET',
@@ -71,17 +74,39 @@ class API {
             ]
         ]);
         
+        //Handle Summary
         register_rest_route('cashflow-tracker/v1', '/summary', [
             'methods' => 'GET',
             'callback' => [$this, 'get_summary'],
             'permission_callback' => [$this, 'check_permission']
         ]);
+
+        //Handle or Fetch one specific wallet by ID
+        register_rest_route('cashflow-tracker/v1', '/wallets/(?P<id>\d+)', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'get_wallet'],
+                'permission_callback' => [$this, 'check_permission']
+            ],
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'update_wallet'],
+                'permission_callback' => [$this, 'check_permission']
+            ],
+            [
+                'methods' => 'DELETE',
+                'callback' => [$this, 'delete_wallet'],
+                'permission_callback' => [$this, 'check_permission']
+            ]
+        ]);
     }
     
+    //Check if user is logged in
     public function check_permission() {
         return is_user_logged_in();
     }
     
+    //Fetch all wallets for the current user
     public function get_wallets() {
         global $wpdb;
         
@@ -95,7 +120,77 @@ class API {
         
         return rest_ensure_response($wallets);
     }
-    
+
+    //Fetch one specific wallet by ID
+    public function get_wallet($request) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cft_wallets';
+        $wallet = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d AND user_id = %d",
+            $request['id'], get_current_user_id()
+        ));
+        
+        if (!$wallet) {
+            return new WP_Error('not_found', 'Wallet not found', ['status' => 404]);
+        }
+        
+        return rest_ensure_response($wallet);
+    }
+
+    //Update a specific wallet by ID
+    public function update_wallet($request) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cft_wallets';
+        
+        $result = $wpdb->update(
+            $table,
+            [
+                'name' => sanitize_text_field($request['name']),
+                'balance' => floatval($request['balance'])
+            ],
+            [
+                'id' => $request['id'],
+                'user_id' => get_current_user_id()
+            ],
+            ['%s', '%f'],
+            ['%d', '%d']
+        );
+        
+        if (false === $result) {
+            return new WP_Error('db_error', 'Could not update wallet', ['status' => 500]);
+        }
+        
+        return rest_ensure_response(['success' => true]);
+    }
+
+    //Delete a specific wallet by ID
+    public function delete_wallet($request) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cft_wallets';
+        
+        // First verify wallet belongs to user
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE id = %d AND user_id = %d",
+            $request['id'], get_current_user_id()
+        ));
+        
+        if (!$exists) {
+            return new WP_Error('not_found', 'Wallet not found', ['status' => 404]);
+        }
+        
+        $result = $wpdb->delete(
+            $table,
+            ['id' => $request['id']],
+            ['%d']
+        );
+        
+        if (false === $result) {
+            return new WP_Error('db_error', 'Could not delete wallet', ['status' => 500]);
+        }
+        
+        return rest_ensure_response(['success' => true]);
+    }
+        
     private function verify_tables() {
     global $wpdb;
     

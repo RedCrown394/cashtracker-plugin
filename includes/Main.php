@@ -3,7 +3,7 @@ namespace CFT;
 
 defined('ABSPATH') || exit;
 
-// // After ABSPATH check
+// After ABSPATH check
 // define('CFT_VERSION', '1.0');
 // define('CFT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 // define('CFT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -20,6 +20,8 @@ defined('ABSPATH') || exit;
 //         CFT\Activator::activate();
 //     }
     
+    
+
 //     // Then initialize the plugin
 //     $plugin = new CFT\Main();
 //     $plugin->run();
