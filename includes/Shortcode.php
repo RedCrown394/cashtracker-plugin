@@ -69,6 +69,7 @@ class Shortcode {
             </section>
         </div>
 
+        <!--modal for add wallet-->
         <div class="modal" id="wallet-modal">
             <div class="modal-content">
                 <h3><?php _e('Add New Wallet', 'cashflow-tracker'); ?></h3>
@@ -81,7 +82,6 @@ class Shortcode {
                 </div>
             </div>
         </div>
-
 
         <!--modal for manage wallet-->
         <div class="modal" id="manage-wallets-modal">
