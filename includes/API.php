@@ -163,24 +163,77 @@ class API {
         return rest_ensure_response(['success' => true]);
     }
 
-    //Delete a specific wallet by ID
+    // //Delete a specific wallet by ID
+    // public function delete_wallet($request) {
+    //     global $wpdb;
+    //     $table = $wpdb->prefix . 'cft_wallets';
+        
+    //     // First verify wallet belongs to user
+    //     $exists = $wpdb->get_var($wpdb->prepare(
+    //         "SELECT id FROM $table WHERE id = %d AND user_id = %d",
+    //         $request['id'], get_current_user_id()
+    //     ));
+        
+    //     if (!$exists) {
+    //         return new WP_Error('not_found', 'Wallet not found', ['status' => 404]);
+    //     }
+        
+    //     $result = $wpdb->delete(
+    //         $table,
+    //         ['id' => $request['id']],
+    //         ['%d']
+    //     );
+        
+    //     if (false === $result) {
+    //         return new WP_Error('db_error', 'Could not delete wallet', ['status' => 500]);
+    //     }
+        
+    //     return rest_ensure_response(['success' => true]);
+    // }
+
     public function delete_wallet($request) {
         global $wpdb;
-        $table = $wpdb->prefix . 'cft_wallets';
+        $wallet_table = $wpdb->prefix . 'cft_wallets';
+        $txn_table = $wpdb->prefix . 'cft_transactions';
         
-        // First verify wallet belongs to user
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM $table WHERE id = %d AND user_id = %d",
-            $request['id'], get_current_user_id()
+        $user_id = get_current_user_id();
+        $wallet_id = $request['id'];
+        $delete_transactions = $request->get_param('delete_transactions') === 'true';
+        
+        // Verify wallet belongs to user
+        $wallet = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $wallet_table WHERE id = %d AND user_id = %d",
+            $wallet_id, $user_id
         ));
         
-        if (!$exists) {
+        if (!$wallet) {
             return new WP_Error('not_found', 'Wallet not found', ['status' => 404]);
         }
         
+        // Handle transactions based on user choice
+        if ($delete_transactions) {
+            // Option 1: Delete all related transactions
+            $wpdb->delete(
+                $txn_table,
+                ['wallet_id' => $wallet_id],
+                ['%d']
+            );
+        } else {
+            // Option 2: Mark transactions as belonging to deleted wallet
+            $wpdb->query($wpdb->prepare(
+                "UPDATE $txn_table 
+                SET wallet_id = 0, 
+                    description = CONCAT(description, %s) 
+                WHERE wallet_id = %d",
+                ' (Deleted Wallet)',
+                $wallet_id
+            ));
+        }
+        
+        // Delete the wallet
         $result = $wpdb->delete(
-            $table,
-            ['id' => $request['id']],
+            $wallet_table,
+            ['id' => $wallet_id],
             ['%d']
         );
         
