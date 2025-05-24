@@ -18,6 +18,8 @@ class Shortcode {
             <header class="tracker-header">
                 <h1><?php _e('Cash Flow Tracker', 'cashflow-tracker'); ?> 💰</h1>
                 <nav>
+                    <a href="#" id="#"><?php _e('Add New Transaction', 'cashflow-tracker'); ?></a>
+
                     <a href="#" id="manage-wallets"><?php _e('Manage Wallets', 'cashflow-tracker'); ?></a>
                     <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>"><?php _e('Logout', 'cashflow-tracker'); ?></a>
                 </nav>
@@ -105,6 +107,51 @@ class Shortcode {
                     <label><?php _e('Balance:', 'cashflow-tracker'); ?></label>
                     <input type="number" step="0.01" id="edit-wallet-balance">
                 </div>
+
+                <!-- WILL DELETE THIS SECTION -->
+                <!-- Delete options section
+                <div class="form-group delete-options" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 14px; color: #666;">
+                            <?php _e('When deleting this wallet:', 'cashflow-tracker'); ?>
+                        </span>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="delete-transactions" name="delete_transactions" 
+                                style="margin: 0; accent-color: #dc3545;">
+                            <span style="font-size: 14px;">
+                                <?php _e('Delete all transactions', 'cashflow-tracker'); ?>
+                            </span>
+                        </label>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #888;">
+                        <?php _e('If unchecked, transactions will be kept but marked as "Wallet deleted"', 'cashflow-tracker'); ?>
+                    </p>
+                </div> -->
+
+                <!-- PREFER TO USE THIS ONE -->
+                <!-- Delete Options Section -->
+                <div class="delete-options" style="margin: 15px 0; padding: 12px; background: rgba(240,240,240,0.3); border-radius: 4px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 14px; color: #666;">
+                            <?php _e('Delete Option:', 'cashflow-tracker'); ?>
+                        </span>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="delete-transactions" style="margin: 0; accent-color: #dc3545;">
+                            <span style="font-size: 14px;"><?php _e('With all transactions', 'cashflow-tracker'); ?></span>
+                        </label>
+
+                    </div>
+
+                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #888;">
+                        <?php _e('If unchecked, transactions will be kept but marked as "Wallet deleted"', 'cashflow-tracker'); ?>
+                    </p>
+                </div>
+
+
+                <!-- TO BE CONTINUED 
+                Manage Wallet modal refreshes 
+                -->
+
 
                 <div class="form-actions">
                     <button id="save-wallet-changes" class="btn success">
