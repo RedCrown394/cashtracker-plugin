@@ -18,8 +18,9 @@ class Shortcode {
             <header class="tracker-header">
                 <h1><?php _e('Cash Flow Tracker', 'cashflow-tracker'); ?> 💰</h1>
                 <nav>
-                    <a href="#" id="#"><?php _e('Add New Transaction', 'cashflow-tracker'); ?></a>
-
+                    
+                    <a href="#" id="refresh-btn"><?php _e('Refresh', 'cashflow-tracker'); ?></a>
+                    <a href="#" id="#"><?php _e('Share Cashflow', 'cashflow-tracker'); ?></a>
                     <a href="#" id="manage-wallets"><?php _e('Manage Wallets', 'cashflow-tracker'); ?></a>
                     <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>"><?php _e('Logout', 'cashflow-tracker'); ?></a>
                 </nav>
@@ -130,7 +131,7 @@ class Shortcode {
 
                 <!-- PREFER TO USE THIS ONE -->
                 <!-- Delete Options Section -->
-                <div class="delete-options" style="margin: 15px 0; padding: 12px; background: rgba(240,240,240,0.3); border-radius: 4px;">
+                <!-- <div class="delete-options" style="margin: 15px 0; padding: 12px; background: rgba(240,240,240,0.3); border-radius: 4px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span style="font-size: 14px; color: #666;">
                             <?php _e('Delete Option:', 'cashflow-tracker'); ?>
@@ -145,7 +146,7 @@ class Shortcode {
                     <p style="margin: 8px 0 0 0; font-size: 13px; color: #888;">
                         <?php _e('If unchecked, transactions will be kept but marked as "Wallet deleted"', 'cashflow-tracker'); ?>
                     </p>
-                </div>
+                </div> -->
 
 
                 <!-- TO BE CONTINUED 
@@ -173,6 +174,157 @@ class Shortcode {
                 </div>
             </div>
         </div>
+
+        <!-- Add this anywhere in your #cashflow-tracker div -->
+         <!-- Remove 'show' class later for JS control -->
+        <!-- <div id="transaction-modal" class="modal show"> 
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; font-size: 1.25rem;">Edit Transaction</h3>
+            <button class="cft-modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <form>
+            <input type="hidden" id="txn-edit-id" value="123">
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">Description</label>
+                <input 
+                type="text" 
+                value="Groceries" 
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                >
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">Type</label>
+                <select style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                <option value="IN">Income</option>
+                <option value="OUT" selected>Expense</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">Amount (₱)</label>
+                <input 
+                type="number" 
+                value="50.00" 
+                step="0.01"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                >
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">Wallet</label>
+                <select style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                <option value="1" selected>Main Wallet</option>
+                <option value="2">Savings</option>
+                <option value="3">Emergency Fund</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 1rem;">
+                <button 
+                type="button" 
+                style="padding: 0.75rem 1.5rem; background: #f5f7fa; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                >
+                Cancel
+                </button>
+                <button 
+                type="submit" 
+                style="padding: 0.75rem 1.5rem; background: #3366ff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                >
+                Save Changes
+                </button>
+            </div>
+            </form>
+        </div>
+        </div> -->
+
+        
+        <!-- Transaction Edit Modal -->
+        <div class="modal" id="transaction-edit-modal">
+            <div class="modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3><?php _e('Edit Transaction', 'cashflow-tracker'); ?></h3>
+                    <button class="cft-modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                
+                <form id="transaction-edit-form">
+                    <input type="hidden" id="txn-edit-id">
+                    <input type="hidden" id="txn-edit-wallet-id"> <!-- Added hidden wallet ID field -->
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">
+                            <?php _e('Wallet', 'cashflow-tracker'); ?>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="txn-edit-wallet-name"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                            readonly
+                        >
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">
+                            <?php _e('Description', 'cashflow-tracker'); ?>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="txn-edit-title"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">
+                            <?php _e('Type', 'cashflow-tracker'); ?>
+                        </label>
+                        <select 
+                            id="txn-edit-type"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                            required
+                        >
+                            <option value="IN"><?php _e('Income', 'cashflow-tracker'); ?></option>
+                            <option value="OUT"><?php _e('Expense', 'cashflow-tracker'); ?></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #555;">
+                            <?php _e('Amount (₱)', 'cashflow-tracker'); ?>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="txn-edit-amount"
+                            step="0.01"
+                            min="0"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+                            required
+                        >
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 1rem;">
+                        <button 
+                            type="button" 
+                            id="cancel-txn-edit"
+                            style="padding: 0.75rem 1.5rem; background: #f5f7fa; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                        >
+                            <?php _e('Cancel', 'cashflow-tracker'); ?>
+                        </button>
+                        <button 
+                            type="submit" 
+                            style="padding: 0.75rem 1.5rem; background: #3366ff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                        >
+                            <?php _e('Save Changes', 'cashflow-tracker'); ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <?php
         return ob_get_clean();
     }
