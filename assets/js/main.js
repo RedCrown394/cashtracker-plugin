@@ -30,6 +30,19 @@
             this.$editName = $('#edit-wallet-name');
             this.$editBalance = $('#edit-wallet-balance');
             this.initModals();
+
+            // Edit Transaction Modal elements
+            this.$txnEditModal = $('#transaction-edit-modal');
+            this.$txnEditForm = $('#transaction-edit-form');
+            this.$txnEditId = $('#txn-edit-id');
+            this.$txnEditWalletId = $('#txn-edit-wallet-id');
+            this.$txnEditWalletName = $('#txn-edit-wallet-name');
+            this.$txnEditTitle = $('#txn-edit-title');
+            this.$txnEditAmount = $('#txn-edit-amount');
+            this.$txnEditType = $('#txn-edit-type');
+
+            
+
         }
 
         // ====================MANAGE WALLET MODAL==================== //
@@ -109,8 +122,153 @@
                 const type = $submitBtn.attr('id') === 'cash-in' ? 'IN' : 'OUT';
                 this.addTransaction(type);
             });
+
+            //Show Transaction edit modal
+            $(document).on('click', '.edit-txn-btn', (e) => this.showEditModal(e));
+            // Modal close handlers
+            $('#cancel-txn-edit, #transaction-edit-modal .cft-modal-close').on('click', () => this.hideEditModal());
+            // Form submission
+            this.$txnEditForm.on('submit', (e) => this.saveEditedTransaction(e));  
+            
+            // Add this for delete functionality for transactions history
+            $(document).on('click', '.delete-txn-btn', (e) => {
+                e.preventDefault();
+                const txnId = $(e.currentTarget).data('txn-id');
+                this.deleteTransaction(txnId);
+            });
         }
+
+        showEditModal(e) {
+        const txnData = $(e.currentTarget).data('txn');
         
+        
+        // Populate form with transaction data
+        this.$txnEditId.val(txnData.id);
+        this.$txnEditWalletId.val(txnData.wallet_id);
+        this.$txnEditWalletName.val(txnData.wallet_name); // Display wallet name
+        this.$txnEditTitle.val(txnData.description);
+        this.$txnEditAmount.val(parseFloat(txnData.amount).toFixed(2));
+        this.$txnEditType.val(txnData.type);
+        
+        // Show modal
+        this.$txnEditModal.addClass('show');
+    }
+
+    hideEditModal() {
+        this.$txnEditModal.removeClass('show');
+        this.$txnEditForm.trigger('reset');
+    }
+
+    deleteTransaction(txnId) {
+        if (!confirm('Are you sure you want to delete this transaction?')) {
+            return;
+        }
+
+        const $btn = $(`.delete-txn-btn[data-txn-id="${txnId}"]`);
+        $btn.prop('disabled', true).text('Deleting...');
+
+        $.ajax({
+            //url: `${cftData.rest_url}transactions/${txnId}`,
+            url: `${cftData.rest_url}/transactions/${txnId}`,
+
+            method: 'DELETE',
+            headers: {
+                'X-WP-Nonce': cftData.nonce,
+                'Content-Type': 'application/json'
+            },
+            success: (response) => {
+                if (response.success) {
+                    $(`li[data-txn-id="${txnId}"]`).fadeOut(300, () => {
+                        $(this).remove();
+                    });
+                    //this.updateWalletBalances(); // Refresh wallet balances if needed
+                    this.loadData(); // Refresh main wallet list
+                } else {
+                    alert(response.message || 'Failed to delete transaction');
+                }
+            },
+            error: (xhr) => {
+                console.error('Delete error:', xhr.responseText);
+                alert('Error deleting transaction');
+            },
+            complete: () => {
+                $btn.prop('disabled', false).text('Delete');
+            }
+        });
+    }
+
+    saveEditedTransaction(e) {
+        e.preventDefault();
+        
+        const transactionData = {
+            id: this.$txnEditId.val(),
+            description: this.$txnEditTitle.val(),
+            amount: this.$txnEditAmount.val(),
+            type: this.$txnEditType.val(),
+            wallet_id: this.$txnEditWalletId.val()
+        };
+
+        console.log('Sending transaction data:', transactionData); // Debug log
+
+        // Validate amount
+        if (parseFloat(transactionData.amount) <= 0) {
+            alert('Amount must be greater than 0');
+            return;
+        }
+
+        // Show loading state
+        // const $submitBtn = this.$txnEditForm.find('[type="submit"]');
+        // $submitBtn.prop('disabled', true).text('Saving...');
+
+        $.ajax({
+            //url: cftData.rest_url + 'transactions/' + transactionData.id,
+            url: cftData.rest_url + '/transactions/' + transactionData.id,
+
+            method: 'PATCH',
+            headers: { 
+                'X-WP-Nonce': cftData.nonce,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify(transactionData),
+            dataType: 'json',
+            success: (response) => {
+                console.log('API Response:', response);
+                if (response.success) {
+                    alert('Transaction updated successfully!');
+
+                    // // 1. Update the UI directly
+                    // const transactionId = transactionData.id;
+                    // this.updateTransactionInUI(transactionId, transactionData);
+
+                    this.loadData(); // Refresh transaction list
+
+                    this.hideEditModal();
+                    //this.fetchTransactions(); // Consider refreshing just the data instead of full page reload
+                } else {
+                    alert(response.message || 'Update failed');
+                }
+            },
+            
+            error: (xhr) => {
+                console.error('Error:', xhr.responseText);
+                let errorMsg = 'Failed to update transaction';
+                try {
+                    const jsonResponse = JSON.parse(xhr.responseText);
+                    errorMsg = jsonResponse.message || errorMsg;
+                    if (jsonResponse.data && jsonResponse.data.params) {
+                        errorMsg += '\n' + JSON.stringify(jsonResponse.data.params, null, 2);
+                    }
+                } catch (e) {
+                    errorMsg += ` (Status: ${xhr.status})`;
+                }
+                alert(errorMsg);
+            },
+            // complete: () => {
+            //     $submitBtn.prop('disabled', false).text('Save Changes');
+            // }
+            
+        });
+    }   
         // ===================METHODS FOR MANAGE WALLET=================== //
         showManageModal() {
         this.$walletEditSelect.empty().append('<option value="">Select a wallet</option>');
@@ -162,52 +320,6 @@
                 }
             });
         }   
-        
-        saveWalletChanges() {
-        const walletId = this.$walletEditSelect.val();
-        const newName = this.$editName.val().trim();
-        const newBalance = parseFloat(this.$editBalance.val());
-
-        const $saveWalletBtn = $('#save-wallet-changes');
-        $saveWalletBtn.prop('disabled', true).text('Saving...'); // Disable during Save
-
-        if (!newName) {
-            alert(cftData.i18n.invalid_data);
-            $saveWalletBtn.prop('disabled', false).text('Save Changes'); // Re-enable on validation fail
-            return;
-        }
-
-        $.ajax({
-            url: `${cftData.rest_url}/wallets/${walletId}`,
-            method: 'POST',
-            beforeSend: (xhr) => {
-                xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
-            },
-            data: {
-            name: newName,
-            balance: newBalance
-            },
-            success: () => {
-            $saveWalletBtn.prop('disabled', false).text('Save Changes'); // Success re-enable   
-            this.loadData(); // Refresh all data
-            // Refresh all wallet-related components
-            //this.loadWalletsForManagement(); // Refresh dropdown
-            // this.loadData(); // Refresh main wallet list and balances
-            this.loadWalletSelector(); // Refresh transaction form dropdown
-           
-
-            // Reset the edit form
-            this.$walletEditSelect.val('');
-            $('.wallet-edit-form').hide();
-
-            this.loadWalletForEditing(); // Refresh selected wallet data
-
-
-            //alert('Wallet updated successfully');
-
-            },
-        });
-        }
 
         saveWalletChanges() {
             const walletId = this.$walletEditSelect.val();
@@ -237,16 +349,16 @@
                     // 1. Update the dropdown OPTION directly (immediate UI update)
                     const $dropdown = this.$walletEditSelect;
                     $dropdown.find(`option[value="${walletId}"]`)
-                        .text(`${newName} (₱${newBalance.toFixed(2)}`);
+                        .text(`${newName} (₱${newBalance.toFixed(2)})`);
 
                     // 2. Refresh other components
                     this.loadData(); // Refresh main wallet list
-                    this.loadWalletSelector(); // Refresh transaction form dropdown
+                    //this.loadWalletSelector(); // Refresh transaction form dropdown
 
                     // 3. Reset and close the form
                     $saveWalletBtn.prop('disabled', false).text('Save Changes');
-                    this.$walletEditSelect.val('');
-                    $('.wallet-edit-form').hide();
+                    //this.$walletEditSelect.val('');
+                    //$('.wallet-edit-form').hide();
                     
                 },
                 error: (xhr) => {
@@ -259,19 +371,15 @@
         deleteSelectedWallet() {
             const walletId = this.$walletEditSelect.val();
             const walletName = this.$editName.val();
-            const deleteTransactions = $('#delete-transactions').is(':checked');
             const $deleteBtn = $('#delete-wallet');
 
             // Disable button during operation
-            $deleteBtn.prop('disabled', true).text(deleteTransactions ? 'Deleting All...' : 'Deleting...');
+            $deleteBtn.prop('disabled', true).text('Deleting...');
 
-            if (!confirm(deleteTransactions 
-                ? `Delete "${walletName}" and ALL its transactions? This cannot be undone!`
-                : `Delete "${walletName}"? Transactions will be kept but marked as deleted.`)) {
+            if (!confirm(`Delete "${walletName}" and ALL its transactions? This cannot be undone!`)) {
                 $deleteBtn.prop('disabled', false).text('Delete Wallet');
                 return;
             }
-
 
             $.ajax({
                 url: `${cftData.rest_url}/wallets/${walletId}`,
@@ -279,20 +387,17 @@
                 beforeSend: (xhr) => {
                     xhr.setRequestHeader('X-WP-Nonce', cftData.nonce);
                 },
-                data: { 
-                    delete_transactions: deleteTransactions 
-                },
                 success: () => {
                     // 1. Remove from dropdown immediately
                     this.$walletEditSelect.find(`option[value="${walletId}"]`).remove();
                     
-                    // 2. Refresh all data
+                    // 2. Refresh all data 
                     this.loadData(); // Main list and balances
-                    this.loadWalletSelector(); // Transaction form
+                   // this.loadWalletSelector(); // Transaction form
                     
                     // 3. Reset form and UI
                     this.$walletEditSelect.val('');
-                    $('.wallet-edit-form, #wallet-delete-options').hide();
+                    $('.wallet-edit-form').hide();
                     $deleteBtn.prop('disabled', false).text('Delete Wallet');
                     
                     // 4. Simple alert feedback
@@ -505,8 +610,40 @@
                     <option value="${wallet.id}">${wallet.name} (₱${parseFloat(wallet.balance).toFixed(2)})</option>
                 `);
             });
-        }
-        
+        } 
+
+        // renderTransactions(transactions) {
+        //     this.$txnHistory.empty();
+            
+        //     transactions.forEach((txn) => {
+        //         const label = txn.type === 'IN' ? '+₱' : '-₱';
+        //         const color = txn.type === 'IN' ? 'in' : 'out';
+        //         const date = new Date(txn.created_at);
+                
+        //         this.$txnHistory.append(`
+        //             <li>
+        //                 <span>
+        //                     ${txn.description}
+        //                     <br/>
+        //                     <small class="txn-meta">
+        //                         ${date.toLocaleString()} – ${txn.wallet_name}
+        //                         <button class="edit-txn-btn" 
+        //                                 data-txn-id="${txn.id}"
+        //                                 data-txn='${JSON.stringify(txn)}'>
+        //                             Edit
+        //                         </button>
+        //                         <button class="delete-txn-btn" 
+        //                                 data-txn-id="${txn.id}">
+        //                             Delete
+        //                         </button>
+        //                     </small>
+        //                 </span>
+        //                 <span class="${color}">${label}${parseFloat(txn.amount).toFixed(2)}</span>
+        //             </li>
+        //         `);
+        //     });
+        // }
+
         renderTransactions(transactions) {
             this.$txnHistory.empty();
             
@@ -516,14 +653,31 @@
                 const date = new Date(txn.created_at);
                 
                 this.$txnHistory.append(`
-                    <li>
-                        <span>${txn.description}<br/><small>${date.toLocaleString()} – ${txn.wallet_name}</small></span>
-                        <span class="${color}">${label}${parseFloat(txn.amount).toFixed(2)}</span>
+                    <li class="transaction-item">
+                        <div class="txn-content">
+                            <div class="txn-description">${txn.description}</div>
+                            <div class="txn-meta-line">
+                                <span class="txn-date">${date.toLocaleString()}</span>
+                                <span class="txn-wallet">– ${txn.wallet_name}</span>
+                            </div>
+                            <div class="txn-actions">
+                                <button class="edit-txn-btn" 
+                                        data-txn-id="${txn.id}"
+                                        data-txn='${JSON.stringify(txn)}'>
+                                    Edit
+                                </button>
+                                <button class="delete-txn-btn" 
+                                        data-txn-id="${txn.id}">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="txn-amount ${color}">${label}${parseFloat(txn.amount).toFixed(2)}</div>
                     </li>
                 `);
             });
         }
-        
+
         renderSummary(summary) {
             this.$balance.text('₱' + summary.total_balance.toFixed(2));
             this.$totalIn.text('₱' + summary.total_in.toFixed(2));
@@ -576,7 +730,8 @@
         clearAllData() {
             // Implement if needed
             console.log('Clear all data functionality would go here');
-        }
+        }   
+
     }
     
     $(document).ready(() => {
