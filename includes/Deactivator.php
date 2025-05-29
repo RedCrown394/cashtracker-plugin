@@ -9,7 +9,7 @@ class Deactivator {
         wp_clear_scheduled_hook('cft_daily_cleanup');
         
         // Optionally clean up data - comment out if you want to preserve data
-        // self::cleanup_data();
+         self::cleanup_data();
     }
     
     private static function cleanup_data() {
