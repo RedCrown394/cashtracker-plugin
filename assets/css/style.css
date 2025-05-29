@@ -424,45 +424,85 @@
   }
 }
 
-/*.delete-options {
-    background: rgba(240,240,240,0.3);
-    border-radius: 6px;
-    padding: 12px 15px;
-    margin: 15px 0;
-}
-
-.delete-options label:hover {
-    color: #333;
-}
-
-*/
-/*===================*/
-.delete-options {
-    border-top: 1px solid #eee;
-    padding-top: 15px;
-    margin-top: 15px;
-}
-
-.delete-options label {
+.transaction-item {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.txn-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.txn-description {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.txn-meta-line {
+    display: flex;
+    color: #666;
+    font-size: 0.85em;
+    margin-bottom: 2px;
+}
+
+.txn-date {
+    white-space: nowrap;
+}
+
+.txn-wallet {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+}
+
+.txn-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.edit-txn-btn, .delete-txn-btn {
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 3px;
     cursor: pointer;
-    user-select: none;
 }
 
-#delete-transactions {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
+.edit-txn-btn {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    color: #555;
 }
 
-.btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.delete-txn-btn {
+    background: #f44336;
+    color: white;
+    border: none;
 }
 
-#delete-wallet:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.txn-amount {
+    font-weight: 600;
+    min-width: 80px;
+    text-align: right;
+    padding-left: 10px;
+}
+
+.in { color: #2e7d32; }
+.out { color: #c62828; }
+
+
+
+.updated-highlight {
+    animation: highlight-fade 1.5s ease;
+}
+
+@keyframes highlight-fade {
+    0% { background-color: rgba(76, 175, 80, 0.3); }
+    100% { background-color: transparent; }
 }
