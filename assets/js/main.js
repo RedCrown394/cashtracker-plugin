@@ -108,6 +108,12 @@
             // ==============END OF ADD WALLET MODALL=================== //
 
 
+            // Add refresh button handler
+            $(document).on('click', '#refresh-btn', (e) => {
+                e.preventDefault();
+                this.handleRefresh();
+            });
+
             //Clear All Transactions
             $('#clear-all').on('click', (e) => {
                 e.preventDefault();
@@ -153,6 +159,27 @@
         // Show modal
         this.$txnEditModal.addClass('show');
     }
+
+    handleRefresh() {
+        const $btn = $('#refresh-btn');
+        
+        // Save original text (optional, but useful)
+        const originalText = $btn.text();
+        
+        // Show loading spinner and message
+        $btn.addClass('loading').prop('disabled', true)
+            .html(`<span class="spinner is-active"></span> Refreshing...`);
+        
+        // Call your data loading method
+        this.loadData();
+
+        // Restore button text after a delay (simulate data load)
+        setTimeout(() => {
+            $btn.removeClass('loading').prop('disabled', false)
+                .text(originalText); // Restore the original "Refresh" text
+        }, 1000);
+    }
+
 
     hideEditModal() {
         this.$txnEditModal.removeClass('show');
@@ -594,13 +621,32 @@
             });
         }
         
+        // renderWallets(wallets) {
+        //     this.$walletList.empty();
+        //     this.$walletSelect.empty().append('<option value="">' + (cftData.i18n.select_wallet || 'Select a wallet') + '</option>');
+            
+        //     wallets.forEach((wallet) => {
+        //         this.$walletList.append(`
+        //             <div class="wallet-card" data-id="${wallet.id}">
+        //                 <span>${wallet.name}</span>
+        //                 <span>₱${parseFloat(wallet.balance).toFixed(2)}</span>
+        //             </div>
+        //         `);
+                
+        //         this.$walletSelect.append(`
+        //             <option value="${wallet.id}">${wallet.name} (₱${parseFloat(wallet.balance).toFixed(2)})</option>
+        //         `);
+        //     });
+        // } 
+
         renderWallets(wallets) {
             this.$walletList.empty();
             this.$walletSelect.empty().append('<option value="">' + (cftData.i18n.select_wallet || 'Select a wallet') + '</option>');
             
             wallets.forEach((wallet) => {
+                // Add wallet card with click handler
                 this.$walletList.append(`
-                    <div class="wallet-card" data-id="${wallet.id}">
+                    <div class="wallet-card" data-id="${wallet.id}" data-wallet='${JSON.stringify(wallet)}'>
                         <span>${wallet.name}</span>
                         <span>₱${parseFloat(wallet.balance).toFixed(2)}</span>
                     </div>
@@ -610,7 +656,14 @@
                     <option value="${wallet.id}">${wallet.name} (₱${parseFloat(wallet.balance).toFixed(2)})</option>
                 `);
             });
-        } 
+
+            // Add click handler for wallet cards
+            this.$walletList.on('click', '.wallet-card', (e) => {
+                const walletId = $(e.currentTarget).data('id');
+                const walletData = $(e.currentTarget).data('wallet');
+                this.filterByWallet(walletId, walletData);
+            });
+        }
 
         // renderTransactions(transactions) {
         //     this.$txnHistory.empty();
@@ -684,49 +737,142 @@
             this.$totalOut.text('₱' + summary.total_out.toFixed(2));
         }
         
-        renderChart(monthlyData) {
-            const ctx = document.getElementById('cashflow-chart').getContext('2d');
+        // renderChart(monthlyData) {
+        //     const ctx = document.getElementById('cashflow-chart').getContext('2d');
             
-            if (this.chart) {
-                this.chart.destroy();
-            }
+        //     if (this.chart) {
+        //         this.chart.destroy();
+        //     }
             
-            const labels = monthlyData.map(item => item.month);
-            const incomeData = monthlyData.map(item => item.income);
-            const expenseData = monthlyData.map(item => item.expense);
+        //     const labels = monthlyData.map(item => item.month);
+        //     const incomeData = monthlyData.map(item => item.income);
+        //     const expenseData = monthlyData.map(item => item.expense);
             
-            this.chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Income',
-                            data: incomeData,
-                            backgroundColor: '#b8e994',
-                            borderColor: '#78e08f',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Expenses',
-                            data: expenseData,
-                            backgroundColor: '#ff7979',
-                            borderColor: '#eb4d4b',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+        //     this.chart = new Chart(ctx, {
+        //         type: 'bar',
+        //         data: {
+        //             labels: labels,
+        //             datasets: [
+        //                 {
+        //                     label: 'Income',
+        //                     data: incomeData,
+        //                     backgroundColor: '#b8e994',
+        //                     borderColor: '#78e08f',
+        //                     borderWidth: 1
+        //                 },
+        //                 {
+        //                     label: 'Expenses',
+        //                     data: expenseData,
+        //                     backgroundColor: '#ff7979',
+        //                     borderColor: '#eb4d4b',
+        //                     borderWidth: 1
+        //                 }
+        //             ]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             scales: {
+        //                 y: {
+        //                     beginAtZero: true
+        //                 }
+        //             }
+        //         }
+        //     });
+        // }
+        
+        renderChart(monthlyData, walletName = 'All Wallets') {
+        const ctx = document.getElementById('cashflow-chart').getContext('2d');
+        
+        // Destroy previous chart if it exists
+        if (this.chart) {
+            this.chart.destroy();
+            this.chart = null; // Explicitly clear reference
+        }
+        
+        // Check if data is valid
+        if (!monthlyData || monthlyData.length === 0) {
+            console.warn("No data to render chart");
+            return;
+        }
+
+        const labels = monthlyData.map(item => item.month);
+        const incomeData = monthlyData.map(item => item.income || 0); // Fallback to 0 if undefined
+        const expenseData = monthlyData.map(item => item.expense || 0);
+
+        this.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: incomeData,
+                        backgroundColor: '#b8e994',
+                        borderColor: '#78e08f',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Expenses',
+                        data: expenseData,
+                        backgroundColor: '#ff7979',
+                        borderColor: '#eb4d4b',
+                        borderWidth: 1
                     }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${walletName}`
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // In your CashFlowTracker class
+    filterByWallet(walletId, walletData) {
+        const $clickedCard = this.$walletList.find(`.wallet-card[data-id="${walletId}"]`);
+        const isActive = $clickedCard.hasClass('active');
+
+        // Remove all highlights first
+        this.$walletList.find('.wallet-card').removeClass('active');
+
+        if (isActive) {
+            // If wallet was already active, reset to show all data
+            this.loadData();
+        } else {
+            // If wallet wasn't active, highlight and filter
+            $clickedCard.addClass('active');
+            
+            // Fetch filtered data
+            $.ajax({
+                url: `${cftData.rest_url}/transactions?wallet_id=${walletId}`,
+                method: 'GET',
+                headers: { 'X-WP-Nonce': cftData.nonce },
+                success: (transactions) => {
+                    this.renderTransactions(transactions);
+                }
+            });
+
+            $.ajax({
+                url: `${cftData.rest_url}/summary?wallet_id=${walletId}`,
+                method: 'GET',
+                headers: { 'X-WP-Nonce': cftData.nonce },
+                success: (summary) => {
+                    this.renderSummary(summary);
+                    this.renderChart(summary.monthly_data, walletData.name);
                 }
             });
         }
-        
+    }
+
+
         clearAllData() {
             // Implement if needed
             console.log('Clear all data functionality would go here');

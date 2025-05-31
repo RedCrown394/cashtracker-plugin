@@ -641,14 +641,92 @@ class API {
     
 
 
+    // public function get_summary($request) {
+    //     global $wpdb;
+    //     $wallet_table = $wpdb->prefix . 'cft_wallets';
+    //     $txn_table = $wpdb->prefix . 'cft_transactions';
+        
+    //     $user_id = get_current_user_id();
+        
+    //     // Initialize default response with proper structure
+    //     $summary = [
+    //         'total_balance' => 0.00,
+    //         'total_in' => 0.00,
+    //         'total_out' => 0.00,
+    //         'monthly_data' => []
+    //     ];
+        
+    //     try {
+    //         // Check if tables exist
+    //         $wallet_exists = $wpdb->get_var($wpdb->prepare(
+    //             "SHOW TABLES LIKE %s", $wallet_table
+    //         )) === $wallet_table;
+            
+    //         $txn_exists = $wpdb->get_var($wpdb->prepare(
+    //             "SHOW TABLES LIKE %s", $txn_table
+    //         )) === $txn_table;
+            
+    //         if (!$wallet_exists || !$txn_exists) {
+    //             return rest_ensure_response($summary);
+    //         }
+            
+    //         // Get total balance
+    //         $total_balance = $wpdb->get_var($wpdb->prepare(
+    //             "SELECT COALESCE(SUM(balance), 0) FROM $wallet_table WHERE user_id = %d",
+    //             $user_id
+    //         ));
+    //         $summary['total_balance'] = (float)$total_balance;
+            
+    //         // Get transaction totals
+    //         $totals = $wpdb->get_row($wpdb->prepare(
+    //             "SELECT 
+    //                 COALESCE(SUM(CASE WHEN type = 'IN' THEN amount ELSE 0 END), 0) as total_in,
+    //                 COALESCE(SUM(CASE WHEN type = 'OUT' THEN amount ELSE 0 END), 0) as total_out
+    //             FROM $txn_table
+    //             WHERE user_id = %d",
+    //             $user_id
+    //         ));
+            
+    //         $summary['total_in'] = (float)$totals->total_in;
+    //         $summary['total_out'] = (float)$totals->total_out;
+            
+    //         // Get monthly data with explicit field initialization
+    //         $monthly_data = $wpdb->get_results($wpdb->prepare(
+    //             "SELECT 
+    //                 DATE_FORMAT(created_at, '%%Y-%%m') as month,
+    //                 COALESCE(SUM(CASE WHEN type = 'IN' THEN amount ELSE 0 END), 0) as income,
+    //                 COALESCE(SUM(CASE WHEN type = 'OUT' THEN amount ELSE 0 END), 0) as expense
+    //             FROM $txn_table
+    //             WHERE user_id = %d
+    //             GROUP BY month
+    //             ORDER BY month ASC",  // ASC to avoid needing reverse
+    //             $user_id
+    //         ), ARRAY_A);
+            
+    //         // Ensure consistent structure even with empty results
+    //         $summary['monthly_data'] = array_map(function($month) {
+    //             return [
+    //                 'month' => $month['month'] ?? '',
+    //                 'income' => (float)($month['income'] ?? 0),
+    //                 'expense' => (float)($month['expense'] ?? 0)
+    //             ];
+    //         }, $monthly_data ?: []);
+            
+    //     } catch (Exception $e) {
+    //         error_log('CFT Summary Error: ' . $e->getMessage());
+    //     }
+        
+    //     return rest_ensure_response($summary);
+    // } 
+
     public function get_summary($request) {
         global $wpdb;
         $wallet_table = $wpdb->prefix . 'cft_wallets';
         $txn_table = $wpdb->prefix . 'cft_transactions';
         
         $user_id = get_current_user_id();
-        
-        // Initialize default response with proper structure
+        $wallet_id = $request->get_param('wallet_id'); // Get wallet_id from request
+
         $summary = [
             'total_balance' => 0.00,
             'total_in' => 0.00,
@@ -657,65 +735,81 @@ class API {
         ];
         
         try {
-            // Check if tables exist
-            $wallet_exists = $wpdb->get_var($wpdb->prepare(
-                "SHOW TABLES LIKE %s", $wallet_table
-            )) === $wallet_table;
-            
-            $txn_exists = $wpdb->get_var($wpdb->prepare(
-                "SHOW TABLES LIKE %s", $txn_table
-            )) === $txn_table;
-            
-            if (!$wallet_exists || !$txn_exists) {
+            if (!$this->tables_exist($wallet_table, $txn_table)) {
                 return rest_ensure_response($summary);
             }
-            
-            // Get total balance
-            $total_balance = $wpdb->get_var($wpdb->prepare(
-                "SELECT COALESCE(SUM(balance), 0) FROM $wallet_table WHERE user_id = %d",
+
+            // ===== 1. TOTAL BALANCE ===== //
+            $balance_query = $wpdb->prepare(
+                "SELECT COALESCE(SUM(balance), 0) FROM $wallet_table 
+                WHERE user_id = %d",
                 $user_id
-            ));
-            $summary['total_balance'] = (float)$total_balance;
-            
-            // Get transaction totals
-            $totals = $wpdb->get_row($wpdb->prepare(
+            );
+
+            if ($wallet_id) {
+                $balance_query = $wpdb->prepare(
+                    "SELECT balance FROM $wallet_table 
+                    WHERE user_id = %d AND id = %d",
+                    $user_id, $wallet_id
+                );
+            }
+
+            $summary['total_balance'] = (float)$wpdb->get_var($balance_query);
+
+            // ===== 2. TRANSACTION TOTALS ===== //
+            $txn_query = $wpdb->prepare(
                 "SELECT 
                     COALESCE(SUM(CASE WHEN type = 'IN' THEN amount ELSE 0 END), 0) as total_in,
                     COALESCE(SUM(CASE WHEN type = 'OUT' THEN amount ELSE 0 END), 0) as total_out
                 FROM $txn_table
                 WHERE user_id = %d",
                 $user_id
-            ));
-            
+            );
+
+            if ($wallet_id) {
+                $txn_query .= $wpdb->prepare(" AND wallet_id = %d", $wallet_id);
+            }
+
+            $totals = $wpdb->get_row($txn_query);
             $summary['total_in'] = (float)$totals->total_in;
             $summary['total_out'] = (float)$totals->total_out;
-            
-            // Get monthly data with explicit field initialization
-            $monthly_data = $wpdb->get_results($wpdb->prepare(
+
+            // ===== 3. MONTHLY DATA ===== //
+            $monthly_query = $wpdb->prepare(
                 "SELECT 
                     DATE_FORMAT(created_at, '%%Y-%%m') as month,
                     COALESCE(SUM(CASE WHEN type = 'IN' THEN amount ELSE 0 END), 0) as income,
                     COALESCE(SUM(CASE WHEN type = 'OUT' THEN amount ELSE 0 END), 0) as expense
                 FROM $txn_table
-                WHERE user_id = %d
-                GROUP BY month
-                ORDER BY month ASC",  // ASC to avoid needing reverse
+                WHERE user_id = %d",
                 $user_id
-            ), ARRAY_A);
-            
-            // Ensure consistent structure even with empty results
+            );
+
+            if ($wallet_id) {
+                $monthly_query .= $wpdb->prepare(" AND wallet_id = %d", $wallet_id);
+            }
+
+            $monthly_query .= " GROUP BY month ORDER BY month ASC";
+            $monthly_data = $wpdb->get_results($monthly_query, ARRAY_A);
+
             $summary['monthly_data'] = array_map(function($month) {
                 return [
-                    'month' => $month['month'] ?? '',
-                    'income' => (float)($month['income'] ?? 0),
-                    'expense' => (float)($month['expense'] ?? 0)
+                    'month' => $month['month'],
+                    'income' => (float)$month['income'],
+                    'expense' => (float)$month['expense']
                 ];
             }, $monthly_data ?: []);
-            
+
         } catch (Exception $e) {
             error_log('CFT Summary Error: ' . $e->getMessage());
         }
         
         return rest_ensure_response($summary);
-    } 
+    }
+    // Helper function to check table existence
+    private function tables_exist($wallet_table, $txn_table) {
+        global $wpdb;
+        return $wpdb->get_var("SHOW TABLES LIKE '$wallet_table'") === $wallet_table
+            && $wpdb->get_var("SHOW TABLES LIKE '$txn_table'") === $txn_table;
+    }
 }

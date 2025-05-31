@@ -42,7 +42,11 @@ class Shortcode {
             </div>
 
             <section class="wallets">
-                <h2><?php _e('Wallet Status', 'cashflow-tracker'); ?> <button id="add-wallet">+ <?php _e('Add Wallet', 'cashflow-tracker'); ?></button></h2>
+                <h2>
+                    <?php _e('Wallet Status', 'cashflow-tracker'); ?>
+                    <button id="add-wallet">+ <?php _e('Add Wallet', 'cashflow-tracker'); ?></button>
+                    <!-- <button id="reset-filter" class="button"><?php _e('Show All', 'cashflow-tracker'); ?></button> -->
+                </h2>
                 <div id="wallet-list" class="wallet-list"></div>
             </section>
 
