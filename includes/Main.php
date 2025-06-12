@@ -3,31 +3,6 @@ namespace CFT;
 
 defined('ABSPATH') || exit;
 
-// After ABSPATH check
-// define('CFT_VERSION', '1.0');
-// define('CFT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-// define('CFT_PLUGIN_URL', plugin_dir_url(__FILE__));
-
-// // Initialize the plugin
-// function cft_init() {
-//     // First verify tables exist
-//     global $wpdb;
-//     $wallets_table = $wpdb->prefix . 'cft_wallets';
-    
-//     if ($wpdb->get_var("SHOW TABLES LIKE '$wallets_table'") != $wallets_table) {
-//         // If tables don't exist, run activation
-//         require_once CFT_PLUGIN_DIR . 'includes/Activator.php';
-//         CFT\Activator::activate();
-//     }
-    
-    
-
-//     // Then initialize the plugin
-//     $plugin = new CFT\Main();
-//     $plugin->run();
-// }
-
-// add_action('plugins_loaded', 'cft_init');
 
 class Main {
     private $loader;
